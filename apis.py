@@ -15,8 +15,8 @@ def health_check():
 @api_router.post("/game")
 def game(game_payload: GamePayload) -> GameReport:
     game = GameService(game_payload)
-    game_summary = game.play()
-    return game.report(game_summary)
+    game.play()
+    return game.report()
 
 
 @api_router.get("/strategies")

@@ -1,6 +1,7 @@
 from adaptor.adaptor_mapping import strategies
 from adaptor.game_abc import Game
 from schemas.game import GamePayload, GameReport
+from schemas.match import GameRecords, MatchRecord, PlayerRecord
 from schemas.records import MoveEnums, RecordType
 
 
@@ -11,43 +12,66 @@ class GameService:
             game_payload.first_strategy,
             game_payload.second_strategy,
         )
-        self.strategy1_record: RecordType = []
-        self.strategy2_record: RecordType = []
+        self.strategy1_moves: RecordType = []
+        self.strategy2_moves: RecordType = []
         self.strategy1_game: Game = strategies.get(strategy1)()
         self.strategy2_game: Game = strategies.get(strategy2)()
         self.strategy1_score = 0
         self.strategy2_score = 0
+        self.game_record: GameRecords = []
 
-    def compute_score(self, strategy1_move, strategy2_move):
-        if strategy1_move == strategy2_move == MoveEnums.COOPERATE:
-            self.strategy1_score += 3
-            self.strategy2_score += 3
-        elif strategy1_move == strategy2_move == MoveEnums.DEFECT:
-            self.strategy1_score += 1
-            self.strategy2_score += 1
-        elif (
-            strategy1_move == MoveEnums.COOPERATE
-            and strategy2_move == MoveEnums.DEFECT
-        ):
-            self.strategy2_score += 5
-        elif (
-            strategy1_move == MoveEnums.DEFECT
-            and strategy2_move == MoveEnums.COOPERATE
-        ):
-            self.strategy1_score += 5
+    def update_match_socres(self, match_record: MatchRecord):
+        strategy1_move = match_record.strategy1.move
+        strategy2_move = match_record.strategy2.move
+        COOPERATE = MoveEnums.COOPERATE.value
+        DEFECT = MoveEnums.DEFECT.value
+        if strategy1_move == strategy2_move == COOPERATE:
+            match_record.strategy1.score = 3
+            match_record.strategy2.score = 3
+        elif strategy1_move == strategy2_move == DEFECT:
+            match_record.strategy1.score = 1
+            match_record.strategy2.score = 1
+        elif strategy1_move == COOPERATE and strategy2_move == DEFECT:
+            match_record.strategy2.score = 5
+        elif strategy1_move == DEFECT and strategy2_move == COOPERATE:
+            match_record.strategy1.score = 5
+        self.strategy1_score += match_record.strategy1.score
+        self.strategy2_score += match_record.strategy2.score
+        return match_record
 
     def play(self):
         for _ in range(self.game_payload.rounds):
             strategy1_move = self.strategy1_game.move(
-                self.strategy1_record, self.strategy2_record
+                self.strategy1_moves, self.strategy2_moves
             )
             strategy2_move = self.strategy2_game.move(
-                self.strategy2_record, self.strategy1_record
+                self.strategy2_moves, self.strategy1_moves
             )
-            self.strategy1_record.append(strategy1_move)
-            self.strategy2_record.append(strategy2_move)
-            self.compute_score(strategy1_move, strategy2_move)
+            self.strategy1_moves.append(strategy1_move)
+            self.strategy2_moves.append(strategy2_move)
 
+            match_record = self.generate_match_record(
+                strategy1_move, strategy2_move
+            )
+            self.game_record.append(match_record)
+
+        return self.game_record
+
+    def generate_match_record(self, strategy1_move, strategy2_move):
+        match_record = MatchRecord(
+            strategy1=PlayerRecord(
+                strategy=self.game_payload.first_strategy,
+                move=strategy1_move,
+            ),
+            strategy2=PlayerRecord(
+                strategy=self.game_payload.second_strategy,
+                move=strategy2_move,
+            ),
+        )
+        revised_match_record = self.update_match_socres(match_record)
+        return revised_match_record
+
+    def game_summary(self):
         return [
             {
                 "strategy": f"{self.game_payload.first_strategy}",
@@ -59,10 +83,18 @@ class GameService:
             },
         ]
 
-    def report(self, game_summary):
+    def get_winner(self):
         if self.strategy1_score == self.strategy2_score:
-            return GameReport(winner="Draw", scores=game_summary)
-        winner = max(game_summary, key=lambda x: x.get("score")).get(
-            "strategy"
+            return "Draw"
+        else:
+            return max(self.game_summary(), key=lambda x: x.get("score")).get(
+                "strategy"
+            )
+
+    def report(self):
+        game_summary = self.game_summary()
+        game_records = GameRecords(records=self.game_record)
+        winner = self.get_winner()
+        return GameReport(
+            winner=winner, scores=game_summary, score_board=game_records
         )
-        return GameReport(winner=winner, scores=game_summary)

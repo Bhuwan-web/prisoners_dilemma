@@ -3,6 +3,8 @@ from typing import List, Optional
 from adaptor.adaptor_mapping import strategies
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from schemas.match import GameRecords
+
 
 strategies = tuple(strategies.keys())
 
@@ -50,6 +52,7 @@ class GamePayload(BaseModel):
 class GameReport(BaseModel):
     winner: str
     scores: List[dict]
+    score_board: GameRecords
 
 
 class Strategies(BaseModel):
