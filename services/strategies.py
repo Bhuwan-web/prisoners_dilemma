@@ -1,5 +1,5 @@
 from schemas.game import Strategies
-from adaptor.adaptor_mapping import strategies
+from adapter.adaptor_mapping import strategies
 
 
 class Strategy:

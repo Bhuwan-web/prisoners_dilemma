@@ -1,6 +1,6 @@
 import random
 from typing import List, Optional
-from adaptor.adaptor_mapping import strategies
+from adapter.adaptor_mapping import strategies
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from schemas.match import GameRecords

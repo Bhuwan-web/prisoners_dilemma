@@ -1,5 +1,5 @@
-from adaptor.adaptor_mapping import strategies
-from adaptor.game_abc import Game
+from adapter.adaptor_mapping import strategies
+from adapter.game_abc import Game
 from schemas.game import GamePayload, GameReport
 from schemas.match import GameRecords, MatchRecord, PlayerRecord
 from schemas.records import MoveEnums, RecordType
