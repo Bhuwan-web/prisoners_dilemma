@@ -2,13 +2,13 @@
 name: Build NPM Package
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
-permissions: 
+permissions:
   checks: write
-  contents: read  
+  contents: read
   packages: read
 env:
   API_URL: https://app.dev.veribom.com
@@ -66,8 +66,8 @@ jobs:
         env:
           PSE_DEBUG_FLAG: --alsologtostderr
           POLICY_LOG: t
-          POLICY_AUTH_TOKEN: ${{secrets.VB_API_KEY}} 
-          INVISIRISK_JWT_TOKEN: ${{secrets.VB_API_KEY}} 
+          INVISIRISK_JWT_TOKEN: ${{secrets.VB_API_KEY}}
+          POLICY_AUTH_TOKEN:  ${{secrets.VB_API_KEY}}
           INVISIRISK_PORTAL: https://app.dev.veribom.com/
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
     container:
@@ -94,4 +94,3 @@ jobs:
     - run: npm ci
     - run: npm run build --if-present
     - run: npm test
-        
