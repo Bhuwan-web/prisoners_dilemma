@@ -1,0 +1,97 @@
+
+name: Build NPM Package
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  checks: write
+  contents: read
+  packages: read
+env:
+  API_URL: https://app.dev.veribom.com
+
+jobs:
+  create_scan_in_IR_Portal:
+    runs-on: ubuntu-latest
+    outputs:
+      scan_id: ${{ steps.parseResponse.outputs.scan_id }}
+    steps:
+      - name: Initiating SBOM Scan
+        id: createScan
+        uses: fjogeleit/http-request-action@v1.15.1
+        with:
+          url: '${{env.API_URL}}/utilityapi/v1/scan'
+          method: 'POST'
+          data: '{"api_key": "${{secrets.VB_API_KEY}}"}'
+      - name: Parse Response
+        id: parseResponse
+        run: echo "scan_id=${{fromJSON(steps.createScan.outputs.response).data.scan_id}}" >> "$GITHUB_OUTPUT"
+  ecr_details:
+    runs-on: ubuntu-latest
+    outputs:
+      ecr_username: ${{steps.ecr_details.outputs.username}}
+      ecr_token: ${{steps.ecr_details.outputs.token}}
+      ecr_region: ${{steps.ecr_details.outputs.region}}
+      ecr_id: ${{steps.ecr_details.outputs.registry_id}}
+    steps:
+      - name: Fetching VB Token
+        id: fetchECRDetails
+        uses: fjogeleit/http-request-action@v1.15.1
+        with:
+            url: '${{env.API_URL}}/utilityapi/v1/registry?api_key=${{secrets.VB_API_KEY}}'
+            method: 'GET'
+      - name: Decoding VB Token
+        id: parseToken
+        run: echo "DECODED_TOKEN=$(echo ${{ fromJson(steps.fetchECRDetails.outputs.response).data }} | base64 -d)" >> "$GITHUB_OUTPUT"
+      - name: ECR Details
+        id: ecr_details
+        run: |
+          echo "username=${{fromJSON(steps.parseToken.outputs.DECODED_TOKEN).username}}" >> "$GITHUB_OUTPUT"
+          echo "token=${{fromJSON(steps.parseToken.outputs.DECODED_TOKEN).password}}" >> "$GITHUB_OUTPUT"
+          echo "region=${{fromJSON(steps.parseToken.outputs.DECODED_TOKEN).region}}" >> "$GITHUB_OUTPUT"
+          echo "registry_id=${{fromJSON(steps.parseToken.outputs.DECODED_TOKEN).registry_id}}" >> "$GITHUB_OUTPUT"
+          
+  start_proxy_and_build:
+    runs-on: ubuntu-latest
+    needs: [create_scan_in_IR_Portal, ecr_details]
+    services:
+      pse:
+        image: 282904853176.dkr.ecr.us-west-2.amazonaws.com/invisirisk/pse-proxy:dev-test
+        credentials:
+          username: ${{needs.ecr_details.outputs.ecr_username}}
+          password: ${{needs.ecr_details.outputs.ecr_token}}
+        env:
+          PSE_DEBUG_FLAG: --alsologtostderr
+          POLICY_LOG: t
+          POLICY_AUTH_TOKEN: ${{secrets.VB_API_KEY}} 
+          INVISIRISK_JWT_TOKEN: ${{secrets.VB_API_KEY}} 
+          INVISIRISK_PORTAL: https://app.dev.veribom.com/
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+    container:
+      image: node:18-alpine
+      options: --cap-add=NET_ADMIN
+    strategy:
+      matrix:
+        node-version: [18.x]
+    steps:
+    - env: 
+        SCAN_ID: ${{ needs.create_scan_in_IR_Portal.outputs.scan_id }}
+      run: echo $SCAN_ID
+    - uses: invisirisk/pse-action@v1.0.7
+      with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          SCAN_ID: ${{ needs.create_scan_in_IR_Portal.outputs.scan_id }}
+    - name: Checkout the code
+      uses: actions/checkout@v3
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+    - run: npm install
+    - run: npm ci
+    - run: npm run build --if-present
+    - run: npm test
+        
