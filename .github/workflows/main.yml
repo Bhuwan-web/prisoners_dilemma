@@ -59,7 +59,7 @@ jobs:
     needs: [create_scan_in_IR_Portal, ecr_details]
     services:
       pse:
-        image: 282904853176.dkr.ecr.us-west-2.amazonaws.com/invisirisk/pse-proxy:dev-test
+        image: 282904853176.dkr.ecr.us-west-2.amazonaws.com/invisirisk/pse-proxy:latest
         credentials:
           username: ${{needs.ecr_details.outputs.ecr_username}}
           password: ${{needs.ecr_details.outputs.ecr_token}}
@@ -67,7 +67,8 @@ jobs:
           PSE_DEBUG_FLAG: --alsologtostderr
           POLICY_LOG: t
           INVISIRISK_JWT_TOKEN: ${{secrets.VB_API_KEY}}
-          POLICY_AUTH_TOKEN:  ${{secrets.VB_API_KEY}}
+          POLICY_AUTH_TOKEN: ${{secrets.VB_API_KEY}}
+          POLICY_URL: https://app.dev.invisirisk.com/ingestionapi/v1/get-policies
           INVISIRISK_PORTAL: https://app.dev.veribom.com/
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
     container:
@@ -94,3 +95,4 @@ jobs:
     - run: npm ci
     - run: npm run build --if-present
     - run: npm test
+        
