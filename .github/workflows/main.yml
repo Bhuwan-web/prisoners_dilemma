@@ -70,7 +70,7 @@ jobs:
           POLICY_AUTH_TOKEN: ${{secrets.VB_API_KEY}}
           POLICY_URL: https://app.dev.invisirisk.com/ingestionapi/v1/get-policies
           INVISIRISK_PORTAL: https://app.dev.veribom.com/
-          GITHUB_TOKEN: ${{ secrets.POLICY_TOKEN }} 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
     container:
       image: node:18-alpine
       options: --cap-add=NET_ADMIN --privileged
@@ -83,7 +83,7 @@ jobs:
       run: echo $SCAN_ID
     - uses: invisirisk/pse-action@v1.0.7
       with:
-          github-token: ${{ secrets.POLICY_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           SCAN_ID: ${{ needs.create_scan_in_IR_Portal.outputs.scan_id }}
     - name: Checkout the code
       uses: actions/checkout@v3
