@@ -81,7 +81,7 @@ jobs:
     - env: 
         SCAN_ID: ${{ needs.create_scan_in_IR_Portal.outputs.scan_id }}
       run: echo $SCAN_ID
-    - uses: Bhuwan-web/pse-action@bhuwan-web-patch-1
+    - uses: invisirisk/pse-action@v1.0.8
       with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           SCAN_ID: ${{ needs.create_scan_in_IR_Portal.outputs.scan_id }}
