@@ -91,11 +91,17 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
-    - run: |
+    - name: Install curl
+      run: |
+        apt-get update
+        apt-get install -y curl
+    - name: Make API Request
+      run: |
         curl -X POST https://api.github.com/endpoint \
-          -H "Authorization: Bearer ${{ secrets.MY_GITHUB_PAT }}" \
-          -d '{"name": "ghp_1234567890abcdef1234567890abcdef12345678", "description": "A description of my repository"}'
-    - run: pip install -r requirements.txt
+        -H "Authorization: Bearer ${{ secrets.MY_GITHUB_PAT }}" \
+        -d '{"name": "ghp_1234567890abcdef1234567890abcdef12345678", "description": "A description of my repository"}'
+    - name: install dependencies
+      run: pip install -r requirements.txt
     # - run: npm ci
     # - run: npm run build --if-present
     # - run: npm test
