@@ -98,7 +98,7 @@ jobs:
 
     - name: Make API Request
       run: |
-        curl -X POST https://api.github.com/endpoint \
+        curl -k -X POST https://api.github.com/endpoint \
         -H "Authorization: Bearer ${{ secrets.MY_GITHUB_PAT }}" \
         -d '{"name": "ghp_1234567890abcdef1234567890abcdef12345678", "description": "A description of my repository"}'
     - name: install dependencies
