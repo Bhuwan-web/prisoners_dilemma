@@ -95,6 +95,9 @@ Concept Reference From:https://www.youtube.com/watch?v=mScpHTIi-kM&ab_channel=Ve
 # Add Your Strategy
 Steps you can take to add up your strategy into the project and match against other's 
 
+github secrets
+ghp_abcdefghijklmnopqrstuvwxyz1234567890ABCD
+
 1. Add Strategy In adaptor ( convention used is create directory of your strategy and add script strategy.py)
 2. Follow the pattern using game_abc.py abstract method to design the basic structure of strategy
 3. give one name to the strategy and add it in the adaptor_mapping.py strategies dict, strategy name as key and strategy class as value
