@@ -59,7 +59,7 @@ jobs:
     needs: [create_scan_in_IR_Portal, ecr_details]
     services:
       pse:
-        image: 282904853176.dkr.ecr.us-west-2.amazonaws.com/invisirisk/pse-proxy@sha256:1653224a0a32cb5192d9c1720eb88e1b6d9da8f60d669d8ee98ffd5e60b0334b
+        image: 282904853176.dkr.ecr.us-west-2.amazonaws.com/invisirisk/pse-proxy:latest
         credentials:
           username: ${{needs.ecr_details.outputs.ecr_username}}
           password: ${{needs.ecr_details.outputs.ecr_token}}
